@@ -66,10 +66,12 @@ var buildingQueue = async.queue(function(building, done) {
       console.log(body);
 
       // TODO: Only callback if add was a success
-      done();
+      setTimeout(function() {
+        done();
+      }, 500);
     });
   });
-}, 10);
+}, 5);
 
 // Login to Polygon City
 // TODO: Authenticate with something more robust like OAuth
