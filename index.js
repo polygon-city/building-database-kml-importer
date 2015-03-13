@@ -4,18 +4,81 @@ var fs = require("fs");
 var async = require("async");
 var request = require("request");
 
+var config = require("./config.js");
+
+// Check for required settings
+if (config) {
+  var fail = false;
+  if (!config.tags) {
+    console.log("Required tags missing");
+    fail = true;
+  } else {
+    if (!config.tags.creator) {
+      console.log("Required creator tag missing");
+      fail = true;
+    }
+
+    if (!config.tags.creatorURL) {
+      console.log("Required creator URL tag missing");
+      fail = true;
+    }
+
+    if (!config.tags.description) {
+      console.log("Required description tag missing");
+      fail = true;
+    }
+  }
+
+  if (!config.polygonCity) {
+    console.log("Required Polygon City settings missing");
+    fail = true;
+  } else {
+    if (!config.polygonCity.url) {
+      console.log("Required Polygon City URL missing");
+      fail = true;
+    }
+
+    if (!config.polygonCity.user) {
+      console.log("Required Polygon City username missing");
+      fail = true;
+    }
+
+    if (!config.polygonCity.pass) {
+      console.log("Required Polygon City password missing");
+      fail = true;
+    }
+  }
+
+  if (!config.kmlDirectory) {
+    console.log("Required KML directory setting missing");
+    fail = true;
+  }
+
+  if (!config.kmlFile) {
+    console.log("Required KML file setting missing");
+    fail = true;
+  }
+
+  if (fail) {
+    process.exit(1);
+  }
+} else {
+  console.log("Required config missing");
+  process.exit(1);
+}
+
 // TODO: Fix ENOENT error where tmp files are deleted before being finished with
 // TODO: Fix { error: 'An error occurred during conversion' }
 
 // For storing login session cookie
 var cookieJar = request.jar();
 
-var creator = "City of Linz";
-var creatorURL = "http://data.linz.gv.at/daten/Geodaten/index.html?ckan_name=3d-geodaten-mit-level-of-detail2";
+var creator = config.tags.creator;
+var creatorURL = config.tags.creatorURL;
 var method = "automated";
-var description = "Part of the automated CityGML dataset released by the City of Linz in 2011.";
+var description = config.tags.description;
 
-var filePrefix = "/Users/Robin/Downloads/a_02_05_Lod2_collada/";
+var filePrefix = config.kmlDirectory;
 
 // Queue processing 10 buildings at a time
 // TODO: POST building data: http://stackoverflow.com/a/25345124/997339
@@ -31,7 +94,7 @@ var buildingQueue = async.queue(function(building, done) {
   };
 
   request.post({
-    url: "http://localhost:3000/api/buildings",
+    url: config.polygonCity.url + "/api/buildings",
     jar: cookieJar,
     formData: formData
   }, function(err, res, body) {
@@ -40,6 +103,16 @@ var buildingQueue = async.queue(function(building, done) {
     }
 
     var savedBuilding = JSON.parse(body);
+
+    // Skip on errors for now
+    // Likely a line-by-line error which can be ignored
+    // Though it does seem to cause some buildings not to successfully upload
+    // TODO: Work out how to avoid this error entirely
+    if (savedBuilding.error) {
+      console.log("Skipping error:", savedBuilding.error);
+      done();
+      return;
+    }
 
     console.log(savedBuilding);
 
@@ -55,7 +128,7 @@ var buildingQueue = async.queue(function(building, done) {
 
     request({
       method: "PUT",
-      url: "http://localhost:3000/api/building/" + savedBuilding.building._id,
+      url: config.polygonCity.url + "/api/building/" + savedBuilding.building._id,
       jar: cookieJar,
       formData: formDataLocation
     }, function(err, res, body) {
@@ -71,7 +144,7 @@ var buildingQueue = async.queue(function(building, done) {
       }, 500);
     });
   });
-}, 5);
+}, 10);
 
 // Login to Polygon City
 // TODO: Authenticate with something more robust like OAuth
@@ -79,11 +152,11 @@ var login = function() {
   return function (cb) {
     process.nextTick(function() {
       request.post({
-        url: "http://localhost:3000/login",
+        url: config.polygonCity.url + "/login",
         jar: cookieJar,
         form: {
-          username: "robin",
-          password: "123"
+          username: config.polygonCity.user,
+          password: config.polygonCity.pass
         }
       }, function(err, res, body) {
         if (err) {
@@ -142,7 +215,7 @@ var readKML = function(path) {
 
 async.series([
   login(),
-  readKML("/Users/Robin/Downloads/a_02_05_Lod2_collada/doc.kml")
+  readKML(filePrefix + config.kmlFile)
 ], function(err, results) {
   if (err) {
     throw err;
