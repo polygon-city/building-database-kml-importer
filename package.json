@@ -1,7 +1,7 @@
 {
-  "name": "building-database-importer",
+  "name": "building-database-kml-importer",
   "version": "0.0.1",
-  "description": "Bulk import of buildings for use in the 3D database app",
+  "description": "Bulk import of buildings using KML for use in Polygon City",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
