@@ -4,6 +4,7 @@
 
 * Double-check the collada files are valid and single buildings
   * I usually just open a few in [MeshLab](http://meshlab.sourceforge.net/) as a quick check
+* Install the NPM modules using `npm install`
 * Update the settings in `config.js`
 * Run the script using `node index.js`
 * Wait for it to finish - it can take a while
