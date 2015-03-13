@@ -6,6 +6,9 @@ var request = require("request");
 
 var config = require("./config.js");
 
+// TODO: Set buildings as hidden until confirmed as correct
+// TODO: Set buildings as visible using another script when happy
+
 // Check for required settings
 if (config) {
   var fail = false;
@@ -120,6 +123,8 @@ var buildingQueue = async.queue(function(building, done) {
     // TODO: Calculate proper scale and angle
     var formDataLocation = {
       // Forced scale assuming indentical across models (based on metre units)
+      // This is actually wrong as the metre scaling is different at different latitudes
+      // TODO: Work out how to set scale dynamically
       scale: 0.6804606524581953,
       angle: building.angle,
       latitude: building.latitude,
