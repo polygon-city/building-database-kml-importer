@@ -102,7 +102,12 @@ var buildingQueue = async.queue(function(building, done) {
     formData: formData
   }, function(err, res, body) {
     if (err) {
-      throw err;
+      // Skip on error
+      //throw err;
+      console.error(err);
+      console.log("Skipping building");
+      done();
+      return;
     }
 
     var savedBuilding = JSON.parse(body);
@@ -122,10 +127,8 @@ var buildingQueue = async.queue(function(building, done) {
     // Add location
     // TODO: Calculate proper scale and angle
     var formDataLocation = {
-      // Forced scale assuming indentical across models (based on metre units)
-      // This is actually wrong as the metre scaling is different at different latitudes
-      // TODO: Work out how to set scale dynamically
-      scale: 0.6804606524581953,
+      // Leave original scale, assuming units are in metres already
+      scale: 1,
       angle: building.angle,
       latitude: building.latitude,
       longitude: building.longitude
