@@ -1,5 +1,13 @@
 # Polygon City KML Importer
 
+## Using batches
+
+The concept of batched uploads is still very new and the approach is flimsy at best, though it works. It's important to know how to use batches otherwise you may end up duplicating buildings on Polygon City.
+
+__If you're adding a new batch of buildings:__ make sure the `batchID` config string is empty and the importer will create a new batch on Polygon City.
+
+__If you're continuing an existing batch:__ make sure the `batchID` config option is set to the ID string you received previously when uploading a new batch. This will ensure that only buildings not already added are uploaded. _Be sure this is correct as otherwise the buildings will be added to Polygon City again but using a different batch ID - they will be duplicated._
+
 ## Importing a KML file of collada models into Polygon City
 
 * Double-check the collada files are valid and single buildings

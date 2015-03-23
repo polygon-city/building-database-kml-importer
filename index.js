@@ -79,7 +79,7 @@ if (config) {
 var cookieJar = request.jar();
 
 // Batch ID for upload
-var batchID;
+var batchID = (config.batchID) ? config.batchID.toString() : "";
 
 // Buildings to exclude from batch
 var batchExclude = [];

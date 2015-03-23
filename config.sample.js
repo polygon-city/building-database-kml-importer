@@ -10,5 +10,6 @@ module.exports = {
     url: "http://polygoncity.url",
     user: "username",
     pass: "password"
-  }
+  },
+  batchID: ""
 };
