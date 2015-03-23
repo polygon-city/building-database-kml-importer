@@ -138,35 +138,6 @@ var buildingQueue = async.queue(function(building, done) {
 
     console.log(savedBuilding);
 
-    // REMOVED: Location can now be added in the initial building POST request
-    // // Add location
-    // // TODO: Calculate proper scale and angle
-    // var formDataLocation = {
-    //   // Leave original scale, assuming units are in metres already
-    //   scale: 1,
-    //   angle: building.angle,
-    //   latitude: building.latitude,
-    //   longitude: building.longitude
-    // };
-
-    // request({
-    //   method: "PUT",
-    //   url: config.polygonCity.url + "/api/building/" + savedBuilding.building._id,
-    //   jar: cookieJar,
-    //   formData: formDataLocation
-    // }, function(err, res, body) {
-    //   if (err) {
-    //     throw err;
-    //   }
-
-    //   console.log(body);
-
-    //   // TODO: Only callback if add was a success
-    //   setTimeout(function() {
-    //     done();
-    //   }, 500);
-    // });
-
     done();
   });
 }, 10);
