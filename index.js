@@ -8,6 +8,8 @@ var config = require("./config.js");
 
 // TODO: Set buildings as hidden until confirmed as correct
 // TODO: Set buildings as visible using another script when happy
+// TODO: Resume uploads after failure, even if script has crashed
+// https://github.com/polygon-city/building-database-kml-importer/issues/2
 
 // Check for required settings
 if (config) {
@@ -76,6 +78,12 @@ if (config) {
 // For storing login session cookie
 var cookieJar = request.jar();
 
+// Batch ID for upload
+var batchID;
+
+// Buildings to exclude from batch
+var batchExclude = [];
+
 var creator = config.tags.creator;
 var creatorURL = config.tags.creatorURL;
 var method = "automated";
@@ -93,7 +101,13 @@ var buildingQueue = async.queue(function(building, done) {
     creator: building.creator,
     creatorURL: building.creatorURL,
     method: building.method,
-    description: building.description
+    description: building.description,
+    // Leave original scale, assuming units are in metres already
+    scale: 1,
+    angle: building.angle,
+    latitude: building.latitude,
+    longitude: building.longitude,
+    batchID: building.batchID
   };
 
   request.post({
@@ -124,33 +138,36 @@ var buildingQueue = async.queue(function(building, done) {
 
     console.log(savedBuilding);
 
-    // Add location
-    // TODO: Calculate proper scale and angle
-    var formDataLocation = {
-      // Leave original scale, assuming units are in metres already
-      scale: 1,
-      angle: building.angle,
-      latitude: building.latitude,
-      longitude: building.longitude
-    };
+    // REMOVED: Location can now be added in the initial building POST request
+    // // Add location
+    // // TODO: Calculate proper scale and angle
+    // var formDataLocation = {
+    //   // Leave original scale, assuming units are in metres already
+    //   scale: 1,
+    //   angle: building.angle,
+    //   latitude: building.latitude,
+    //   longitude: building.longitude
+    // };
 
-    request({
-      method: "PUT",
-      url: config.polygonCity.url + "/api/building/" + savedBuilding.building._id,
-      jar: cookieJar,
-      formData: formDataLocation
-    }, function(err, res, body) {
-      if (err) {
-        throw err;
-      }
+    // request({
+    //   method: "PUT",
+    //   url: config.polygonCity.url + "/api/building/" + savedBuilding.building._id,
+    //   jar: cookieJar,
+    //   formData: formDataLocation
+    // }, function(err, res, body) {
+    //   if (err) {
+    //     throw err;
+    //   }
 
-      console.log(body);
+    //   console.log(body);
 
-      // TODO: Only callback if add was a success
-      setTimeout(function() {
-        done();
-      }, 500);
-    });
+    //   // TODO: Only callback if add was a success
+    //   setTimeout(function() {
+    //     done();
+    //   }, 500);
+    // });
+
+    done();
   });
 }, 10);
 
@@ -178,9 +195,70 @@ var login = function() {
   };
 };
 
+var getBatchID = function() {
+  return function (cb) {
+    process.nextTick(function() {
+      request.get({
+        url: config.polygonCity.url + "/api/batch/id",
+        jar: cookieJar
+      }, function(err, res, body) {
+        if (err) {
+          throw err;
+        }
+
+        var bodyJSON = JSON.parse(body);
+
+        if (!bodyJSON || !bodyJSON.id) {
+          cb(new Error("Unable to request batch ID"));
+          return;
+        }
+
+        batchID = bodyJSON.id;
+
+        console.log("Batch ID:", batchID);
+
+        cb(null, batchID);
+      });
+    });
+  };
+};
+
+var getBatch = function() {
+  return function (cb) {
+    process.nextTick(function() {
+      if (!batchID) {
+        cb(new Error("Batch ID not found"));
+        return;
+      }
+
+      request.get({
+        url: config.polygonCity.url + "/api/batch/" + batchID,
+        jar: cookieJar
+      }, function(err, res, body) {
+        if (err) {
+          throw err;
+        }
+
+        var bodyJSON = JSON.parse(body);
+        batchExclude = bodyJSON;
+
+        console.log("Batch ID:", batchID);
+        console.log("Batch:", _.pluck(bodyJSON, "name"));
+
+        cb(null, bodyJSON);
+      });
+    });
+  };
+};
+
 var readKML = function(path) {
   return function (cb) {
     process.nextTick(function() {
+      if (!batchID) {
+        cb(new Error("Batch ID not found"));
+        return;
+      }
+
       fs.readFile(path, "utf-8", function(err, data) {
         if (err) {
           throw err;
@@ -199,6 +277,16 @@ var readKML = function(path) {
         var kml = jxon.kml.document;
 
         _.each(kml.placemark, function(placemark) {
+          // TODO: Find something other than name to rely on as this can be changed manually after upload - perhaps batch.ref?
+          var exclude = _.find(batchExclude, function(building) {
+            return (building.name === placemark.name);
+          });
+
+          if (exclude) {
+            console.log("Skipping building as already uploaded:", placemark.name);
+            return;
+          }
+
           var output = {};
 
           output.name = placemark.name;
@@ -210,6 +298,7 @@ var readKML = function(path) {
           output.latitude = placemark.model.location.latitude,
           output.longitude = placemark.model.location.longitude,
           output.angle = placemark.model.orientation.heading
+          output.batchID = batchID;
 
           // Add building to queue
           buildingQueue.push(output);
@@ -221,8 +310,11 @@ var readKML = function(path) {
   };
 };
 
+// TODO: Should this be a waterfall instead so the login cookie and batch ID can be passed along?
+// TODO: If batch ID is provided on load, check current status and only upload buildings that haven't been added (eg. that aren't returned)
 async.series([
   login(),
+  (batchID) ? getBatch() : getBatchID(),
   readKML(filePrefix + config.kmlFile)
 ], function(err, results) {
   if (err) {
