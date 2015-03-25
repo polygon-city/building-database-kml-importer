@@ -19,7 +19,7 @@ __If you're continuing an existing batch:__ make sure the `batchID` config optio
 * Approach 2: Using the terminal
   * Run `node index.js -kml /path/to/doc.kml` and follow the instructions
 * Wait for it to finish - it can take a while
-* [Re-run with the previous batch ID](#using-batches) should anything go wrong
+* [Re-run with the previous batch ID](#using-batches) should anything go wrong. It's worth doing this anyway as it serves as a check to ensure everything was added ok.
 * Check the newly added buildings in Polygon City
 
 
