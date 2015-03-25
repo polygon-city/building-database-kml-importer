@@ -13,9 +13,13 @@ __If you're continuing an existing batch:__ make sure the `batchID` config optio
 * Double-check the collada files are valid and single buildings
   * I usually just open a few in [MeshLab](http://meshlab.sourceforge.net/) as a quick check
 * Install the NPM modules using `npm install`
-* Rename `config.sample.js` to `config.js` and update the settings
-* Run the script using `node index.js`
+* Approach 1: Using the config.js file
+  * Rename `config.sample.js` to `config.js` and update the settings
+  * Run the script using `node index.js`
+* Approach 2: Using the terminal
+  * Run `node index.js -kml /path/to/doc.kml` and follow the instructions
 * Wait for it to finish - it can take a while
+* [Re-run with the previous batch ID](#using-batches) should anything go wrong
 * Check the newly added buildings in Polygon City
 
 
