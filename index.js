@@ -9,7 +9,7 @@ var request = require("request");
 var config;
 var kmlPath;
 
-if (!argv || (!argv.k && !argv.kml)) {
+if (!argv || (!argv.k && !argv.kml) ||) {
   console.log("Path to KML file must be provided via the -k or --kml flag.")
   process.exit(0);
 } else {
