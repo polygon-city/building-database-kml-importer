@@ -212,7 +212,6 @@ var checkConfig = function() {
 // TODO: Send location data POST request after successful file upload
 var buildingQueue = async.queue(function(building, done) {
   var formData = {
-    name: building.name,
     model: fs.createReadStream(filePrefix + building.model),
     creator: building.creator,
     creatorURL: building.creatorURL,
@@ -223,7 +222,8 @@ var buildingQueue = async.queue(function(building, done) {
     angle: building.angle,
     latitude: building.latitude,
     longitude: building.longitude,
-    batchID: building.batchID
+    batchID: building.batchID,
+    batchBuildingRef: building.batchBuildingRef
   };
 
   request.post({
@@ -377,7 +377,7 @@ var readKML = function(path) {
         _.each(kml.placemark, function(placemark) {
           // TODO: Find something other than name to rely on as this can be changed manually after upload - perhaps batch.ref?
           var exclude = _.find(batchExclude, function(building) {
-            return (building.name === placemark.name);
+            return (building.batch.buildingRef === placemark.name);
           });
 
           if (exclude) {
@@ -387,7 +387,6 @@ var readKML = function(path) {
 
           var output = {};
 
-          output.name = placemark.name;
           output.model = placemark.model.link.href;
           output.creator = creator;
           output.creatorURL = creatorURL;
@@ -397,6 +396,7 @@ var readKML = function(path) {
           output.longitude = placemark.model.location.longitude,
           output.angle = placemark.model.orientation.heading
           output.batchID = batchID;
+          output.batchBuildingRef = placemark.name;
 
           // Add building to queue
           buildingQueue.push(output);
