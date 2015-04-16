@@ -14,7 +14,7 @@ __If you're continuing an existing batch:__ make sure the `batchID` config optio
 * Install the NPM modules using `npm install`
 * Approach 1: Using the config.js file
   * Rename `config.sample.js` to `config.js` and update the settings
-  * Run the script using `node index.js -kml /path/to/doc.kml`
+  * Run the script using `node index.js --kml /path/to/doc.kml`
 * Approach 2: Using the terminal
   * Run `node index.js --kml /path/to/doc.kml` and follow the instructions
 * Wait for it to finish - it can take a while
