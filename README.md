@@ -62,8 +62,8 @@ __If you're continuing an existing batch:__ make sure the `batchID` config optio
   * (It's normal to see warnings about dodgy geometry and missing textures)
 * Convert the CityGML to KML / collada
   * Click on the "KML/COLLADA Export" tab
-  * Click browser and choose a loation and filename for the exported KMZ
-  * Select the bounding box radio button and define the bounds (this can be a bit of a pain)
+  * Click "Browse" and choose a location and filename for the exported KMZ
+  * Select the bounding box radio button and define the bounds (this can be a bit of a pain - can probably just select the whole world if your db only has one city in it)
   * Ensure "Reference system" is set to "[Default] WGS 84"
   * Set level of detail to "highest LoD available"
   * Ensure only "COLLADA" selected in "Display as" section
